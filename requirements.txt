@@ -1,0 +1,10 @@
+flask
+numpy
+pandas
+transformers
+torch
+sqlalchemy
+psycopg2-binary
+elasticsearch
+python-dotenv
+scikit-learn
