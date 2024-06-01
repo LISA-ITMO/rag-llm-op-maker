@@ -1,2 +1,4 @@
 
 data/analytics_db.sql
+.idea/*
+.env

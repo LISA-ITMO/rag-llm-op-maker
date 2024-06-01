@@ -21,7 +21,8 @@ def do_stuff(user_query):
 
     data = {
         'user_query': user_query,
-        'retrieved_data': retrieved_data,
+        'retrieved_data': retrieved_data['text'],
+        'explanation': retrieved_data['explanation'],
         'generated_data': result
     }
     return data
