@@ -8,15 +8,19 @@ app = Flask(__name__)
 @app.route('/generate', methods=['POST'])
 def process():
     data = request.json
-    text = data['text']
-    result = do_stuff(text)
+    title = data['title']
+    level = data['level']
+    keywords = data['keywords']
+    result = do_stuff(title, keywords, level)
     return jsonify(result)
 
 
-def do_stuff(user_query):
+def do_stuff(title, keywords, level):
+    user_query = title + " " + keywords
     retrieved_data = rag_system(user_query)
-    prompt = (f"Based on the following course information: {retrieved_data}, generate a new course structure for "
-              f"university students. Course should contain topics and subtopics")
+    prompt = (f"Ты помощник преподавателя. Используя имеющуюся информормацию: {retrieved_data}, разработай структуру "
+              f"курса по дисциплине {title} для студентов уровня {level}"
+              f"Структура должна состоять из разделов и тем. Преподаватель попросил включить следующие темы {keywords}")
     result = generate_text_with_chatgpt(prompt)
 
     data = {

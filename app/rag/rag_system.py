@@ -112,27 +112,50 @@ def index_courses(courses):
     actions = [
         {
             "_index": index_name,
-            "_id": work_program_id,
-            "_source": {
-                "id": work_program_id,
-                "title": course_title,
-                "description": course_description,
-                "section": section,
-                "topic": section_topic
-            }
+            "_id": course_id,
+            "_source": data
         }
-        for work_program_id, course_title, course_description, section, section_topic in courses
+        for course_id, data in courses.items()
     ]
 
     # Использование bulk API для индексации данных
     bulk(es, actions)
 
 
+def prepare_courses(rows):
+    course_data = {}
+    for row in rows:
+        course_id = row[0]
+        title = row[1]
+        description = row[2]
+        section = row[3]
+        topic = row[4]
+
+        if course_id not in course_data:
+            course_data[course_id] = {
+                'title': title,
+                'description': description,
+                'sections': set(),
+                'topics': set()
+            }
+
+        course_data[course_id]['sections'].add(section)
+        course_data[course_id]['topics'].add(topic)
+
+    # Преобразование set в list для JSON-совместимости
+    for data in course_data.values():
+        data['sections'] = list(data['sections'])
+        data['topics'] = list(data['topics'])
+
+    return course_data
+
+
 def init():
     create_index(es, index_name=index_name)
     courses = fetch_courses()
     if courses:
-        index_courses(courses)
+        course_data = prepare_courses(courses)  # Агрегация данных
+        index_courses(course_data)  # Индексация данных
         print("Courses indexed successfully!")
 
 
@@ -224,7 +247,7 @@ def rag_system(query):
     if hits:
         top_hit = hits[0]  # Используем первый результат поиска
         return {
-            "text": f"{top_hit['source']['title']}. {top_hit['source']['description']}",
+            "text": f"{top_hit['source']['title']}. {top_hit['source']['description']}. {top_hit['source']['sections']}. {top_hit['source']['topics']}",
             "explanation": top_hit['explanation']
         }
     else:
