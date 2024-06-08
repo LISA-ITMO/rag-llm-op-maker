@@ -4,8 +4,17 @@ import requests
 from dotenv import load_dotenv
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
-from transformers import GPT2LMHeadModel, GPT2Tokenizer
 from sklearn.feature_extraction.text import TfidfVectorizer
+
+from .stopwords import calculate_stop_words
+educational_stopwords = [
+    'курс', 'дисциплина', 'студент', 'система', 'метод', 'процесс', 'навык', 'работа', 'изучение', 'знание', 'задача',
+    'технология', 'область', 'теория', 'принцип', 'исследование', 'course', 'управление', 'решение', 'применение',
+    'цель', 'раздел', 'проектирование', 'данные', 'материал', 'структура', 'развитие', 'свойство', 'качество',
+    'производство', 'модель', 'научный', 'построение', 'элемент', 'деятельность', 'характеристика', 'технологический',
+    'обеспечение', 'расчёт', 'динамический', 'алгоритм', 'разработка', 'результат', 'создание', 'особенность',
+    'лабораторный'
+]
 
 load_dotenv()
 
@@ -46,7 +55,7 @@ def create_index(es, index_name):
                     "custom_standard_analyzer": {
                         "type": "custom",
                         "tokenizer": "standard",
-                        "filter": ["lowercase", "stop", "snowball", "english_stop", "russian_stop"],
+                        "filter": ["lowercase", "stop", "snowball", "english_stop", "russian_stop", "subject_stop"],
                     }
                 },
                 "filter": {
@@ -57,6 +66,10 @@ def create_index(es, index_name):
                     "russian_stop": {
                         "type": "stop",
                         "stopwords": "_russian_"
+                    },
+                    "subject_stop": {
+                        "type": "stop",
+                        "stopwords": educational_stopwords
                     }
                 }
             }
@@ -153,6 +166,7 @@ def prepare_courses(rows):
 def init():
     create_index(es, index_name=index_name)
     courses = fetch_courses()
+    calculate_stop_words(courses)
     if courses:
         course_data = prepare_courses(courses)  # Агрегация данных
         index_courses(course_data)  # Индексация данных
@@ -214,15 +228,6 @@ def search_courses(query):
     return results
 
 
-# Генерация текста с использованием GPT-2
-def generate_text(prompt):
-    tokenizer = GPT2Tokenizer.from_pretrained('gpt2')
-    model = GPT2LMHeadModel.from_pretrained('gpt2')
-    inputs = tokenizer.encode(prompt, return_tensors='pt')
-    outputs = model.generate(inputs, max_length=500, num_return_sequences=1)
-    return tokenizer.decode(outputs[0], skip_special_tokens=True)
-
-
 def generate_text_with_chatgpt(prompt):
     response = requests.post(
         "https://api.openai.com/v1/chat/completions",
@@ -247,11 +252,11 @@ def rag_system(query):
     if hits:
         top_hit = hits[0]  # Используем первый результат поиска
         return {
-            "text": f"{top_hit['source']['title']}. {top_hit['source']['description']}. {top_hit['source']['sections']}. {top_hit['source']['topics']}",
+            "text": f"{', '.join(top_hit['source']['sections'])}. {', '.join(top_hit['source']['topics'])}",
             "explanation": top_hit['explanation']
         }
     else:
         return {
-            "text": "No relevant courses found.",
+            "text": "",
             "explanation": ""
         }

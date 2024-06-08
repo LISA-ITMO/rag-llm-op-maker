@@ -1,9 +1,10 @@
 flask
 numpy
 pandas
-transformers
-torch
-sqlalchemy
+langdetect
+pymorphy2
+requests
+nltk
 psycopg2-binary
 elasticsearch
 python-dotenv
