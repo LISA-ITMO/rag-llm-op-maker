@@ -62,4 +62,4 @@ def calculate_stop_words(courses):
     # Фильтрация слов, которые имеют IDF ниже порога
     stop_words = [word for word, idf in zip(sorted_words, sorted_idfs) if idf <= idf_threshold]
 
-    print("Proposed new stop words:", stop_words)
+    # print("Proposed new stop words:", stop_words)

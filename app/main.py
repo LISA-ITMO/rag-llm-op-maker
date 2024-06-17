@@ -2,13 +2,14 @@ from flask import Flask, request, jsonify, render_template
 import json
 import os
 
-from rag.rag_system import rag_system, generate_text_with_chatgpt
+from rag.rag_system import rag_system, generate_text_with_chatgpt, lemmatize_text
 
 app = Flask(__name__)
 
 
 @app.route('/retrieve', methods=['POST'])
 def retrieve():
+    print('inside retrieve')
     data = request.json
     title = data['title']
     keywords = data['keywords']
@@ -20,16 +21,25 @@ def retrieve():
     directory = 'retrieved'
     base_path = os.path.abspath(os.path.dirname(__file__))
     new_folder_path = os.path.join(base_path, directory)
+    print(f"New folder path: {new_folder_path}")
     if not os.path.exists(new_folder_path):
         os.makedirs(new_folder_path)
 
     if write_to_file:
         filename = f"{title.replace(' ', '_')}.json"
         full_path = os.path.join(new_folder_path, filename)
-        data = result['retrieved_data']
-        with open(full_path, 'w') as file:
-            json.dump(data, file, indent=4)
-            return jsonify(full_path)
+        print(f"Full path: {full_path}")
+        retrieved_data = result['retrieved_data']
+        try:
+            with open(full_path, 'w') as file:
+                json.dump(retrieved_data, file, indent=4)
+            return jsonify({
+                'data': retrieved_data,
+                'path': full_path
+            })
+        except IOError as e:
+            print(f"Error writing file: {e}")
+            return jsonify({'error': 'Failed to write file'}), 500
 
     return jsonify(result)
 
@@ -81,6 +91,7 @@ def prompt_creator(context, title, keywords, level, hours):
 
 def get_db_data(title, keywords, debug):
     user_query = title + ", " + keywords
+    user_query = lemmatize_text(user_query)
     retrieved_data = rag_system(user_query)
 
     data = {
