@@ -1,10 +1,13 @@
 flask
 numpy
 pandas
-transformers
-torch
-sqlalchemy
+langdetect
+spacy
+pymorphy2
+requests
+nltk
 psycopg2-binary
 elasticsearch
 python-dotenv
 scikit-learn
+pymorphy2
