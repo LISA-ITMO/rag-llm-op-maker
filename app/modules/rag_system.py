@@ -5,9 +5,6 @@ import pymorphy2
 from dotenv import load_dotenv
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
-from sklearn.feature_extraction.text import TfidfVectorizer
-
-from .stopwords import calculate_stop_words
 
 educational_stopwords = [
     'курс', 'дисциплина', 'студент', 'система', 'метод', 'процесс', 'навык', 'работа', 'изучение', 'знание', 'задача',
@@ -24,27 +21,13 @@ load_dotenv()
 es_host = os.getenv('ELASTICSEARCH_HOST', 'localhost')
 elastic_password = os.getenv('ELASTIC_PASSWORD')
 api_key = os.getenv('API_KEY')
-
-vectorizer = TfidfVectorizer()
 es = Elasticsearch([f"http://{es_host}:9200"], http_auth=('elastic', elastic_password))
 
 # Создание индекса в Elasticsearch, если он еще не существует
 index_name = "courses"
 
-documents = [
-    "the sky is blue",
-    "the sun is bright",
-    "the sun in the sky is bright",
-    "we can see the shining sun, the bright sun"
-]
-# Обучение модели и преобразование документов в TF-IDF векторы
-tfidf_matrix = vectorizer.fit_transform(documents)
-
-
-# Результаты являются разреженной матрицей
-# print(tfidf_matrix)
-
 morph = pymorphy2.MorphAnalyzer()
+
 
 def lemmatize_text(text):
     if text is None:
@@ -166,7 +149,6 @@ def prepare_courses(rows):
 def init():
     create_index(es, index_name=index_name)
     courses = fetch_courses()
-    calculate_stop_words(courses)
     if courses:
         course_data = prepare_courses(courses)  # Агрегация данных
         index_courses(course_data)  # Индексация данных
@@ -230,6 +212,7 @@ def search_courses(query):
         }
         results.append(result_info)
     return results
+
 
 def generate_text_with_chatgpt(prompt):
     response = requests.post(
