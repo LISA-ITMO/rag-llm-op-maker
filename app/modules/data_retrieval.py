@@ -11,17 +11,18 @@ def get_db_data(title, keywords, debug):
     return result
 
 
-def do_stuff(title, keywords, level, hours, debug):
+def do_stuff(approach, title, keywords, level, hours, rag, debug):
     retrieved_data = get_db_data(title, keywords, debug)
     context = f"«{retrieved_data['retrieved_data']}»" if retrieved_data['retrieved_data'] else ''
-    prompt = prompt_creator(context, title, keywords, level, hours)
+    prompt = prompt_creator(approach, context, title, keywords, level, hours, rag)
     generated_data = generate_text_with_chatgpt(prompt)
     result = {
+        'approach': approach,
         'user_query': title + ", " + keywords,
         'retrieved_data': retrieved_data['retrieved_data'],
         'generated_data': generated_data
     }
     if debug:
         result['prompt'] = prompt
-        result['explanation'] = retrieved_data['explanation']
+        # result['explanation'] = retrieved_data['explanation']
     return result
