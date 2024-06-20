@@ -35,7 +35,15 @@ def retrieve():
 @app.route('/generate', methods=['POST'])
 def generate():
     data = request.json
-    result = do_stuff(data['title'], data['keywords'], data.get('level', ''), data.get('hours', '16'), data.get('debug', False))
+    result = do_stuff(
+        data.get('approach', 'zero-shot'),
+        data['title'],
+        data['keywords'],
+        data.get('level', ''),
+        data.get('hours', '16'),
+        data.get('rag', False),
+        data.get('debug', False)
+    )
     return jsonify(result)
 
 if __name__ == '__main__':
