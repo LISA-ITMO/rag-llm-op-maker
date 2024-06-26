@@ -1,3 +1,4 @@
+import json
 import os
 import psycopg2
 import requests
@@ -76,23 +77,17 @@ def create_index(es, index_name):
     es.indices.create(index=index_name, body=mapping)
 
 
-# Подключение к базе данных и извлечение данных
+def load_mock_data():
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(current_dir, '../mock.json')
+    with open(file_path, 'r') as file:
+        data = json.load(file)
+    return data
+
+
 def fetch_courses():
-    database_url = os.getenv('DATABASE_URL')
-    conn = psycopg2.connect(database_url)
-    cursor = conn.cursor()
-    query = ("select wd.work_program_id, title as course_title, ww.description as course_description, "
-             "name as section, wt.description as section_topic "
-             "from workprogramsapp_topic wt "
-             "join workprogramsapp_disciplinesection wd on wd.id = wt.discipline_section_id "
-             "join workprogramsapp_expertise we on wd.work_program_id = we.work_program_id "
-             "join workprogramsapp_workprogram ww on wd.work_program_id = ww.id "
-             "where work_status = 'a'")
-    cursor.execute(query)
-    courses = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return courses
+    data = load_mock_data()
+    return data['courses']
 
 
 # Индексация данных в Elasticsearch
@@ -101,9 +96,9 @@ def index_courses(courses):
         {
             "_index": index_name,
             "_id": course_id,
-            "_source": data
+            "_source": details
         }
-        for course_id, data in courses.items()
+        for course_id, details in courses.items()
     ]
 
     # Использование bulk API для индексации данных
@@ -112,13 +107,16 @@ def index_courses(courses):
 
 def prepare_courses(rows):
     course_data = {}
-    for row in rows:
-        course_id = row[0]
-        title = row[1]
-        description = row[2]
-        section = row[3]
-        topic = row[4]
 
+    for row in rows:
+        # Extract values directly from the dictionary
+        course_id = str(row['id'])  # Convert to string if needed as a dictionary key
+        title = row['title']
+        description = row['description']
+        sections = row['sections']  # This should be a list
+        topics = row['topics']  # This should be a list
+
+        # Initialize the dictionary for a new course_id
         if course_id not in course_data:
             course_data[course_id] = {
                 'title': title,
@@ -131,12 +129,15 @@ def prepare_courses(rows):
                 'topics_lemmatized': set()
             }
 
-        course_data[course_id]['sections'].add(section)
-        course_data[course_id]['topics'].add(topic)
-        course_data[course_id]['sections_lemmatized'].add(lemmatize_text(section))
-        course_data[course_id]['topics_lemmatized'].add(lemmatize_text(topic))
+        # Add each section and topic to the sets for aggregation
+        for section in sections:
+            course_data[course_id]['sections'].add(section)
+            course_data[course_id]['sections_lemmatized'].add(lemmatize_text(section))
+        for topic in topics:
+            course_data[course_id]['topics'].add(topic)
+            course_data[course_id]['topics_lemmatized'].add(lemmatize_text(topic))
 
-    # Преобразование set в list для JSON-совместимости
+    # Convert sets to lists after all data has been processed for JSON compatibility
     for data in course_data.values():
         data['sections'] = list(data['sections'])
         data['topics'] = list(data['topics'])

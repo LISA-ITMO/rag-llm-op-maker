@@ -2,7 +2,6 @@ flask
 numpy
 pandas
 langdetect
-spacy
 pymorphy2
 requests
 nltk
