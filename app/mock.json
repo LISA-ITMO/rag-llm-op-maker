@@ -1,0 +1,25 @@
+{
+  "courses": [
+    {
+      "id": 1,
+      "title": "Introduction to Computer Science",
+      "description": "This course provides an overview of the fundamental concepts of computer science.",
+      "sections": ["Basics of Computing", "Data Structures"],
+      "topics": ["Algorithms", "Programming Basics"]
+    },
+    {
+      "id": 2,
+      "title": "Advanced Data Analysis",
+      "description": "Explore advanced techniques in data analysis and statistics.",
+      "sections": ["Statistical Methods", "Machine Learning"],
+      "topics": ["Regression Models", "Classification Techniques"]
+    },
+    {
+      "id": 3,
+      "title": "Веб разработка",
+      "description": "Learn the basics of web development, focusing on HTML, CSS, and JavaScript.",
+      "sections": ["HTML Basics", "Styling with CSS", "JavaScript Introduction"],
+      "topics": ["HTML Tags", "CSS Selectors", "JavaScript Functions"]
+    }
+  ]
+}
