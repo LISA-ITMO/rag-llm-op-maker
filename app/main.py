@@ -40,7 +40,7 @@ def generate():
         data['title'],
         data['keywords'],
         data.get('level', ''),
-        data.get('hours', '16'),
+        data.get('hours', ''),
         data.get('rag', False),
         data.get('debug', False)
     )
