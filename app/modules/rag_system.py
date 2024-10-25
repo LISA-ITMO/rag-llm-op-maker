@@ -12,7 +12,7 @@ educational_stopwords = [
     'цель', 'раздел', 'проектирование', 'данные', 'материал', 'структура', 'развитие', 'свойство', 'качество',
     'производство', 'модель', 'научный', 'построение', 'элемент', 'деятельность', 'характеристика', 'технологический',
     'обеспечение', 'расчёт', 'динамический', 'алгоритм', 'разработка', 'результат', 'создание', 'особенность',
-    'лабораторный', 'профессиональный', 'основа', 'анализ'
+    'лабораторный', 'профессиональный', 'основа', 'анализ', 'проблема'
 ]
 
 load_dotenv()
@@ -164,29 +164,45 @@ def search_courses(query):
                     "multi_match": {
                         "query": query,
                         "fields": [
-                            "title_lemmatized^3",
+                            # "title_lemmatized^3",
+                            # "title^3",
                             "description_lemmatized^2",
-                            "section_lemmatized^1.5",
-                            "topic_lemmatized"
+                            "description^2",
+                            "sections_lemmatized^1.5",
+                            "sections^1.5",
+                            "topics_lemmatized",
+                            "topics"
                         ],
                         "type": "best_fields"
                     }
                 },
                 "functions": [
+                    # {
+                    #     "filter": {"match": {"title_lemmatized": query}},
+                    #     "weight": 3
+                    # },
                     {
-                        "filter": {"match": {"title_lemmatized": query}},
-                        "weight": 3
+                        "filter": {"match": {"description": query}},
+                        "weight": 2
                     },
                     {
                         "filter": {"match": {"description_lemmatized": query}},
                         "weight": 2
                     },
                     {
-                        "filter": {"match": {"section_lemmatized": query}},
+                        "filter": {"match": {"sections": query}},
+                        "weight": 2
+                    },
+                    {
+                        "filter": {"match": {"sections_lemmatized": query}},
                         "weight": 1.5
                     },
                     {
-                        "filter": {"match": {"topic_lemmatized": query}},
+                        "filter": {"match": {"topics": query}},
+                        "weight": 1
+                    },
+                    {
+                        "filter": {"match": {"topics_lemmatized": query}},
                         "weight": 1
                     }
                 ],
@@ -194,7 +210,8 @@ def search_courses(query):
                 "boost_mode": "multiply"  # Определяет, как итоговый функциональный счет влияет на счет запроса
             }
         },
-        "_source": ["title", "description", "sections", "topics"],  # Указываем, какие поля нужно вернуть
+        "_source": ["title", "title_lemmatized", "description", "description_lemmatized", "sections",
+                    "sections_lemmatized", "topics", "topics_lemmatized"],  # Указываем, какие поля нужно вернуть
         "size": 10,  # Количество возвращаемых документов
         "explain": True  # Включаем объяснение для каждого документа
     }

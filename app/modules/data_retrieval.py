@@ -3,9 +3,9 @@ from .prompting import prompt_creator
 
 
 def get_db_data(title, keywords, debug):
-    user_query = lemmatize_text(title + ", " + keywords)
-    retrieved_data = rag_system(user_query)
-    result = {'user_query': user_query, 'retrieved_data': retrieved_data['text']}
+    user_query_lemmatized = lemmatize_text(keywords)
+    retrieved_data = rag_system(user_query_lemmatized)
+    result = {'user_query': keywords, 'retrieved_data': retrieved_data['text']}
     if debug:
         result['explanation'] = retrieved_data['explanation']
     return result
@@ -24,5 +24,5 @@ def do_stuff(approach, title, keywords, level, hours, rag, debug):
     }
     if debug:
         result['prompt'] = prompt
-        # result['explanation'] = retrieved_data['explanation']
+        result['explanation'] = retrieved_data['explanation']
     return result
